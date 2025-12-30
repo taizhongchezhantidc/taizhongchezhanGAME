@@ -1,41 +1,35 @@
-import sandboxed from './sandboxed'
-
-export default {
-  async fetch(req: Request, env: Record<string, any>) {
-    const
-      url = new URL(req.url),
-      uri = url.pathname.slice(1)
-
-    // Naively filter out all requests for URIs with dots. Legit, existing files would've been already served
-    // one level higher (before hitting the Worker) and we don't want every single scanner to trigger boots.
-    if (uri.indexOf('.') >= 0) {
-      return new Response(null, { status: 404 })
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Google 試算表嵌入</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #f6f7f8;
     }
-
-    const i = uri.indexOf('/')
-    if (i < 0) {
-      // If a game with this slug exists, append trailing slash and redirect.
-      if (sandboxed[uri]) {
-        url.pathname = uri + '/'
-        return Response.redirect(url.toString(), 308)
-      }
-
-      return new Response(null, { status: 404 })
+    .wrap {
+      height: 100%;
+      width: 100%;
     }
-
-    const game = uri.slice(0, i)
-    if (!sandboxed[game]) return new Response(null, { status: 404 })
-    if (isBot(req)) {
-      // Perma-redirect for crawlers, since we're checking for them anyway
-      // and would rather people hit the game's page than the game directly.
-      return Response.redirect('https://js13kgames.com/games/' + game, 308)
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
     }
-
-    return env.RUNTIME_SANDBOX.fetch(req)
-  }
-}
-
-const naiveBots = /(?<! cu)bots?|crawl|http|scan|search|spider/i
-function isBot(req: Request) {
-  return req.cf.verifiedBotCategory || naiveBots.test(req.headers.get('user-agent'))
-}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <iframe
+      src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNjT3CLtpv1-s1uif7wsHupnFXloDvGXKNvlqps_SHObypAM2sYa7-b2NRPSaGxdLGPBUqEeerba6r/pubhtml?gid=1593704707&amp;single=true&amp;widget=true&amp;headers=false"
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+      allowfullscreen
+    ></iframe>
+  </div>
+</body>
+</html>
